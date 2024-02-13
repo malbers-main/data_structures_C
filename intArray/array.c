@@ -79,7 +79,8 @@ bool push(Array *arr, int element) {
         size_t newCapacity = (arr->capacity == 0) ? 1 : arr->capacity * 2; // Double the capacity
         resize(arr, newCapacity);
     }
-    arr->array[arr->size++] = element;
+    arr->array[arr->size] = element; // Assign element to the next available position
+    arr->size++; // Increment size of the array
     return true;
 }
 
@@ -89,7 +90,7 @@ bool insert(Array *arr, int element, int index) {
         fprintf(stderr, "Error: Cannot insert element because the array is not allocated.\n");
         return false;
     }
-    if (index < 0) {
+    if (index < 0 || index >= arr->capacity) {
         fprintf(stderr, "Error: Cannot insert element because the index is out of bounds.\n");
         return false;
     }
@@ -127,7 +128,15 @@ int pop(Array *arr) {
         fprintf(stderr, "Error: Cannot pop element because the array is empty or not allocated.\n");
         return ARRAY_ERROR;
     }
-    return arr->array[--arr->size];
+    
+    int poppedElement = arr->array[arr->size - 1];
+    if ((arr->size - 1) == (arr->capacity / 4)) {
+        arr->capacity /= 2;
+        arr->size--;
+        return poppedElement;
+    } else {
+        return arr->array[--arr->size];
+    }
 }
 
 // Removes element at specified index and shifts trailing elements to the left
@@ -148,11 +157,11 @@ int find(Array *arr, int element) {
     // If the array is uninitialized or the size is zero return error code
     if (arr == NULL) {
         fprintf(stderr, "Error: Cannot find element index because the array is unitialized.\n");
-        return ARRAY_ERROR;
+        return -1;
     }
     if (arr->size == 0) {
         fprintf(stderr, "Error: Cannot find element index because the array is empty.\n");
-        return ARRAY_ERROR;
+        return -1;
     }
     // Linear search through elements to find specified value, return index
     for (int i = 0; i < arr->size; i++) {
@@ -161,7 +170,6 @@ int find(Array *arr, int element) {
         }
     }
     // Element not found, return -1
-    fprintf(stderr, "Error: Cannot find element in array.\n");
     return -1;
 }
 
@@ -277,7 +285,7 @@ int main() {
                 printf("Enter the element to find: ");
                 scanf("%d", &element);
                 foundIndex = find(arr, element);
-                if (foundIndex != ARRAY_ERROR) {
+                if (foundIndex != -1) {
                     printf("Element %d found at index %d.\n", element, foundIndex);
                 } else {
                     printf("Element %d not found in array.\n", element);
@@ -288,15 +296,19 @@ int main() {
                     printf("Array Information:\n");
                     printf("Size: %zu\n", getSize(arr));
                     printf("Capacity: %zu\n", getCapacity(arr));
-                    printf("Contents: ");
-                    printf("[");
-                    for (size_t i = 0; i < getSize(arr) - 1; i++) {
-                        printf("%d ", *(arr->array + i));
-                        printf(",");
+                    if (arr->size > 0) {
+                        printf("Contents: ");
+                        printf("[");
+                        for (size_t i = 0; i < getSize(arr) - 1; i++) {
+                            printf("%d ", *(arr->array + i));
+                            printf(",");
+                        }
+                        printf("%d", *(arr->array + getSize(arr) - 1));
+                        printf("]");
+                        printf("\n");
+                    } else {
+                        printf("There are no contents to display.\n");
                     }
-                    printf("%d", *(arr->array + getSize(arr) - 1));
-                    printf("]");
-                    printf("\n");
                 } else {
                     printf("Array is not initialized.\n");
                 }
